@@ -1,0 +1,32 @@
+load("@openapi_tools_generator_bazel//:defs.bzl", "openapi_generator")
+load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+
+openapi_generator(
+    name = "petstore_cpp",
+		generator = "cpp-qt5-client",
+    spec = "petstore.yaml",
+)
+
+copy_to_directory(
+		name = "openapi-generated-sources",
+		srcs = [":petstore_cpp"],
+		replace_prefixes = {"petstore_cpp/client": ""}, # Locate sources directly under OpenApiQtClient
+		include_srcs_patterns = ["**/*.cpp", "**/*.h"], # Include only cpps and hpps
+		out = "OpenApiQtClient", # Whatever folder we want to output in
+)
+
+cc_library(
+	  name = "openapi-lib",
+		srcs = [":openapi-generated-sources"],
+		hdrs = [":openapi-generated-sources"],
+		deps = [
+			"@qt//:QtCore",
+			"@qt//:QtNetwork",
+		]
+)
+
+cc_binary(
+		name = "openapi-bin",
+	  srcs = ["main.cpp"],
+		deps = [":openapi-lib"],
+)
